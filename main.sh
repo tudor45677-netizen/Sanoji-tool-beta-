@@ -1,21 +1,27 @@
 #!/bin/bash
 
-# [!] VERIFICARE PERMISIUNI: Daca nu e rulat cu sudo, cere parola automat
+# [1] REPARARE AUTOMATĂ CARACTERE INVIZIBILE (Fix pentru Windows Copy-Paste)
+if [[ $(file "$0") == *"with CRLF line terminators"* ]]; then
+    sed -i 's/\r$//' "$0"
+    exec bash "$0" "$@"
+fi
+
+# [2] VERIFICARE ROOT: Cere parola de la inceput pentru a evita erorile
 if [[ $EUID -ne 0 ]]; then
-   echo -e "\e[1;31m[!] Acest script are nevoie de drepturi de administrator (root).\e[0m"
+   echo -e "\e[1;31m[!] Sanoji are nevoie de drepturi de administrator.\e[0m"
    sudo "$0" "$@"
    exit $?
 fi
 
+# [3] INSTALARE AUTOMATĂ DEPENDENȚE (Daca lipsesc)
+echo -e "\e[0;36m[*] Verificare sistem...\e[0m"
+apt update -y &>/dev/null
+apt install python3 git python3-pip -y &>/dev/null
+
 # Culori Rainbow
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
-WHITE='\033[1;37m'
-NC='\033[0m'
+RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'
+CYAN='\033[0;36m'; BLUE='\033[0;34m'; MAGENTA='\033[0;35m'
+WHITE='\033[1;37m'; NC='\033[0m'
 
 function banner() {
     clear
@@ -28,23 +34,17 @@ function banner() {
     echo -e "${RED}   |\_________\|__|\|__|\|__| \|__|\|_______|\|________|\|__|${NC}"
     echo -e "${YELLOW}   \|_________|                                              ${NC}"
     echo -e "${WHITE}    ----------------------------------------------------------${NC}"
-    echo -e "${GREEN}                 [ SANOJI UNIVERSAL - 25 TOOLS ]${NC}"
+    echo -e "${GREEN}                 [ SANOJI UNIVERSAL - PLUG & PLAY ]${NC}"
     echo -e "${WHITE}    ----------------------------------------------------------${NC}"
 }
 
 function run_tool() {
-    name=$1
-    repo=$2
-    folder=$3
-    exec_file=$4
-    cmd=$5
-
-    # Rezolva problema de permisiuni pentru folderul tools
+    name=$1; repo=$2; folder=$3; exec_file=$4; cmd=$5
     mkdir -p tools
     chmod 777 tools
 
     if [ ! -d "tools/$folder" ]; then
-        echo -e "${CYAN}[*] Descarcare $name...${NC}"
+        echo -e "${CYAN}[*] Instalare $name...${NC}"
         git clone $repo tools/$folder
         chmod -R 777 tools/$folder
     fi
