@@ -1,3 +1,3 @@
-ts is fo education 
+ts is foreducation 
 
 
